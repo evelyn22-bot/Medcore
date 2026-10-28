@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthWaze - Navegador de Saúde</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-0 sm:p-4">
+
+    <!-- Container do App (Mobile Frame em telas grandes, Tela Cheia em mobile) -->
+    <div id="app-container" class="w-full max-w-md bg-slate-950 h-screen sm:h-[844px] sm:rounded-3xl sm:border sm:border-slate-800 shadow-2xl flex flex-col relative overflow-hidden">
+
+        <!-- ================= TELA DE LOGIN / CADASTRO ================= -->
+        <div id="screen-auth" class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 z-50 flex flex-col justify-between p-6 overflow-y-auto">
+            <div class="my-auto pt-8">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600/20 border border-blue-500/30 rounded-2xl text-blue-400 mb-4 shadow-lg shadow-blue-900/40">
+                        <i class="fa-solid fa-hospital-user text-3xl"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold tracking-tight text-white">HealthWaze</h1>
+                    <p class="text-slate-400 text-sm mt-1">Navegação inteligente para atendimento médico</p>
+                </div>
+
+                <!-- Formulário de Login -->
+                <div id="form-login" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-1">E-mail ou CPF</label>
+                        <input type="text" id="login-user" value="paciente@exemplo.com" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-1">Senha</label>
+                        <input type="password" id="login-pass" value="123456" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <button onclick="handleLogin(event)" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition transform active:scale-95">
+                        Entrar no App
+                    </button>
+                    <p class="text-center text-sm text-slate-400 mt-4">
+                        Não tem uma conta? <button onclick="toggleAuthMode('register')" class="text-blue-400 font-semibold hover:underline">Cadastre-se</button>
+                    </p>
+                </div>
+
+                <!-- Formulário de Cadastro -->
+                <div id="form-register" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-1">Nome Completo</label>
+                        <input type="text" id="reg-name" placeholder="Seu nome" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-1">E-mail</label>
+                        <input type="email" id="reg-email" placeholder="seu@email.com" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-1">Senha</label>
+                        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <button onclick="handleRegister(event)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 transition transform active:scale-95">
+                        Criar Conta
+                    </button>
+                    <p class="text-center text-sm text-slate-400 mt-4">
+                        Já possui conta? <button onclick="toggleAuthMode('login')" class="text-blue-400 font-semibold hover:underline">Faça login</button>
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-slate-600 py-2">
+                Protótipo Interativo • Saúde Pública Inteligente
+            </div>
+        </div>
+
+        <!-- ================= HEADER DO APP (LOGADO) ================= -->
+        <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between z-30">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-md" id="user-avatar">
+                    P
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block">Bem-vindo(a),</span>
+                    <span class="text-sm font-semibold text-white truncate max-w-[140px] block" id="user-display-name">Paciente</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="openNotification()" class="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-bell text-sm"></i>
+                </button>
+                <button onclick="logout()" class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 hover:bg-rose-500/20 transition" title="Sair">
+                    <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ================= CONTEÚDO PRINCIPAL (TABS) ================= -->
+        <main class="flex-1 overflow-y-auto relative hide-scrollbar">
+
+            <!-- TAB 1: MAPA / HOSPITAIS -->
+            <section id="tab-map" class="p-4 space-y-4">
+                <!-- Barra de Pesquisa e Filtros -->
+                <div class="space-y-2">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+                        <input type="text" id="search-hospital" oninput="filterHospitals()" placeholder="Buscar hospital ou especialidade..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <!-- Filtros Rápidos -->
+                    <div class="flex space-x-2 overflow-x-auto pb-1 hide-scrollbar">
+                        <button onclick="filterByCrowd('all')" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium whitespace-nowrap shadow-sm filter-btn active-filter" data-filter="all">Todos</button>
+                        <button onclick="filterByCrowd('Verde')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400 text-xs font-medium whitespace-nowrap hover:bg-slate-800 transition filter-btn" data-filter="Verde">🟢 Tranquilo</button>
+                        <button onclick="filterByCrowd('Amarelo')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-amber-400 text-xs font-medium whitespace-nowrap hover:bg-slate-800 transition filter-btn" data-filter="Amarelo">🟡 Moderado</button>
+                        <button onclick="filterByCrowd('Vermelho')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-rose-400 text-xs font-medium whitespace-nowrap hover:bg-slate-800 transition filter-btn" data-filter="Vermelho">🔴 Lotado / Crítico</button>
+                    </div>
+                </div>
+
+                <!-- Simulação Visual do Mapa / Radar -->
+                <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-radar text-blue-400 animate-pulse"></i> Radar de Urgência Próximo
+                        </span>
+                        <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">GPS Ativo</span>
+                    </div>
+
+                    <!-- Gráfico visual estilo mapa Waze simplificado -->
+                    <div class="h-44 bg-slate-950/60 rounded-xl border border-slate-800/50 relative flex items-center justify-center overflow-hidden">
+                        <!-- Grid lines decorativas -->
+                        <div class="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
+                        
+                        <!-- Ponto do Usuário -->
+                        <div class="absolute z-10 flex flex-col items-center">
+                            <div class="w-4 h-4 rounded-full bg-blue-500 animate-ping absolute"></div>
+                            <div class="w-6 h-6 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center shadow-lg shadow-blue-500/50">
+                                <i class="fa-solid fa-user text-[10px] text-white"></i>
+                            </div>
+                            <span class="text-[10px] font-bold bg-slate-900/90 px-1.5 py-0.5 rounded text-blue-300 mt-1 border border-blue-500/30">Você</span>
+                        </div>
+
+                        <!-- Pins de Hospitais no "Mapa" -->
+                        <div onclick="selectHospitalFromMap(0)" class="absolute top-6 left-8 cursor-pointer group flex flex-col items-center transition transform hover:scale-110">
+                            <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-400 flex items-center justify-center shadow-md">
+                                <i class="fa-solid fa-hospital text-xs"></i>
+                            </div>
+                            <span class="text-[9px] bg-slate-900/90 px-1 rounded text-emerald-400 font-semibold mt-0.5">H. Central</span>
+                        </div>
+
+                        <div onclick="selectHospitalFromMap(1)" class="absolute top-12 right-10 cursor-pointer group flex flex-col items-center transition transform hover:scale-110">
+                            <div class="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-500 text-amber-400 flex items-center justify-center shadow-md">
+                                <i class="fa-solid fa-hospital text-xs"></i>
+                            </div>
+                            <span class="text-[9px] bg-slate-900/90 px-1 rounded text-amber-400 font-semibold mt-0.5">Sta. Casa</span>
+                        </div>
+
+                        <div onclick="selectHospitalFromMap(2)" class="absolute bottom-6 left-16 cursor-pointer group flex flex-col items-center transition transform hover:scale-110">
+                            <div class="w-7 h-7 rounded-full bg-rose-500/20 border border-rose-500 text-rose-400 flex items-center justify-center shadow-md">
+                                <i class="fa-solid fa-hospital text-xs"></i>
+                            </div>
+                            <span class="text-[9px] bg-slate-900/90 px-1 rounded text-rose-400 font-semibold mt-0.5">H. Regional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Hospitais Próximos -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-sm font-semibold text-slate-300">Hospitais na Região</h2>
+                        <span class="text-xs text-slate-500" id="hospital-count">3 encontrados</span>
+                    </div>
+                    <div id="hospitais-list" class="space-y-3">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ATENDIMENTO PRÉVIO (TRIAGEM DIGITAL) -->
+            <section id="tab-triage" class="p-4 space-y-4 hidden">
+                <div class="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/20 rounded-2xl p-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                            <i class="fa-solid fa-stethoscope text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-white">Triagem Digital Prévia</h2>
+                            <p class="text-xs text-slate-300 mt-0.5">Relate seus sintomas para receber uma avaliação preliminar e orientação de qual hospital buscar.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat / Formulário de Sintomas -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+                    <div id="chat-messages" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+                        <!-- Mensagem Inicial do Assistente -->
+                        <div class="flex items-start space-x-2">
+                            <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs shrink-0 font-bold">HW</div>
+                            <div class="bg-slate-800 rounded-2xl rounded-tl-sm p-3 text-xs text-slate-200 max-w-[85%] leading-relaxed">
+                                Olá! Para começarmos sua triagem prévia, selecione abaixo o principal sintoma que você está sentindo no momento:
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opções de Sintomas Rápidos -->
+                    <div id="symptoms-options" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                        <button onclick="selectSymptom('Dor no Peito / Falta de Ar', 'Vermelho')" class="bg-slate-950 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-500/50 text-left p-3 rounded-xl transition flex flex-col justify-between group">
+                            <span class="text-xs font-semibold text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-heart-pulse"></i> Dor no Peito / Ar</span>
+                            <span class="text-[10px] text-slate-500 mt-1">Urgência Crítica</span>
+                        </button>
+                        <button onclick="selectSymptom('Febre Alta e Calafrios', 'Amarelo')" class="bg-slate-950 hover:bg-amber-950/40 border border-slate-800 hover:border-amber-500/50 text-left p-3 rounded-xl transition flex flex-col justify-between group">
+                            <span class="text-xs font-semibold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-temperature-high"></i> Febre Alta</span>
+                            <span class="text-[10px] text-slate-500 mt-1">Urgência Moderada</span>
+                        </button>
+                        <button onclick="selectSymptom('Fraturas / Lesões Leves', 'Verde')" class="bg-slate-950 hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/50 text-left p-3 rounded-xl transition flex flex-col justify-between group">
+                            <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-bandage"></i> Lesões Leves</span>
+                            <span class="text-[10px] text-slate-500 mt-1">Pouco Urgente</span>
+                        </button>
+                        <button onclick="selectSymptom('Dor de Cabeça / Tontura', 'Amarelo')" class="bg-slate-950 hover:bg-amber-950/40 border border-slate-800 hover:border-amber-500/50 text-left p-3 rounded-xl transition flex flex-col justify-between group">
+                            <span class="text-xs font-semibold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-head-side-cough"></i> Tontura / Dor</span>
+                            <span class="text-[10px] text-slate-500 mt-1">Urgência Moderada</span>
+                        </button>
+                    </div>
+
+                    <!-- Resultado da Triagem (Oculto Inicialmente) -->
+                    <div id="triage-result" class="hidden pt-3 border-t border-slate-800 animate-fadeIn">
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-400 font-medium">Classificação Sugerida:</span>
+                                <span id="triage-badge" class="px-2.5 py-1 rounded-full text-xs font-bold"></span>
+                            </div>
+                            <p id="triage-advice" class="text-xs text-slate-300 leading-relaxed"></p>
+                            <button onclick="navigateTab('map')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-md">
+                                Ver Hospital Recomendado no Mapa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: PRIORIDADES DE ATENDIMENTO (MANCHESTER) -->
+            <section id="tab-priorities" class="p-4 space-y-4 hidden">
+                <div>
+                    <h2 class="text-base font-bold text-white">Protocolo de Manchester</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Entenda como funciona a classificação de risco nos hospitais integrados ao HealthWaze.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Vermelho -->
+                    <div class="bg-slate-900 border border-rose-500/30 rounded-2xl p-4 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-sm font-bold text-rose-400 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Vermelho (Emergência)
+                            </h3>
+                            <span class="text-[10px] bg-rose-500/10 text-rose-300 border border-rose-500/20 px-2 py-0.5 rounded-full font-semibold">Imediato</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">Risco imediato de morte. Parada cardiorrespiratória, politraumatismo grave, choque.</p>
+                    </div>
+
+                    <!-- Laranja -->
+                    <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-4 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Laranja (Muito Urgente)
+                            </h3>
+                            <span class="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded-full font-semibold">Até 10 min</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">Dor torácica intensa, falta de ar severa, confusão mental súbita, hemorragias controláveis graves.</p>
+                    </div>
+
+                    <!-- Amarelo -->
+                    <div class="bg-slate-900 border border-yellow-500/30 rounded-2xl p-4 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-yellow-400"></div>
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-sm font-bold text-yellow-400 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> Amarelo (Urgente)
+                            </h3>
+                            <span class="text-[10px] bg-yellow-500/10 text-yellow-300 border border-yellow-500/20 px-2 py-0.5 rounded-full font-semibold">Até 60 min</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">Febre alta persistente, vômitos intensos com desidratação, dor moderada a forte, fraturas fechadas.</p>
+                    </div>
+
+                    <!-- Verde -->
+                    <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Verde (Pouco Urgente)
+                            </h3>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold">Até 120 min</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">Sintomas leves, resfriados sem complicações, dores crônicas leves, torções simples.</p>
+                    </div>
+
+                    <!-- Azul -->
+                    <div class="bg-slate-900 border border-blue-500/30 rounded-2xl p-4 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-sm font-bold text-blue-400 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Azul (Não Urgente)
+                            </h3>
+                            <span class="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold">Até 240 min</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">Casos ambulatoriais, renovação de receitas, atestados ou orientações gerais.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PERFIL DO PACIENTE -->
+            <section id="tab-profile" class="p-4 space-y-4 hidden">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
+                    <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3 shadow-lg" id="profile-avatar">
+                        P
+                    </div>
+                    <h2 class="text-base font-bold text-white" id="profile-name">Paciente</h2>
+                    <p class="text-xs text-slate-400" id="profile-email">paciente@exemplo.com</p>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Histórico Recente</h3>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <div>
+                                <span class="text-white font-medium block">Triagem Digital Realizada</span>
+                                <span class="text-slate-500 text-[10px]">Ontem, 14:30</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold text-[10px]">Baixo Risco</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <div>
+                                <span class="text-white font-medium block">Rota Buscada: H. Central</span>
+                                <span class="text-slate-500 text-[10px]">3 dias atrás</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold text-[10px]">Concluído</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="logout()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-semibold py-3 rounded-xl text-sm transition">
+                    Sair da Conta
+                </button>
+            </section>
+
+        </main>
+
+        <!-- ================= MODAL DE ROTA / GPS ================= -->
+        <div id="modal-route" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col justify-end hidden transition-all">
+            <div class="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span id="route-status-badge" class="px-2.5 py-1 rounded-full text-xs font-bold inline-block mb-1"></span>
+                        <h2 id="route-hospital-name" class="text-lg font-bold text-white">Nome do Hospital</h2>
+                        <p id="route-hospital-address" class="text-xs text-slate-400">Endereço do hospital</p>
+                    </div>
+                    <button onclick="closeRouteModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Métricas de Navegação Estilo Waze -->
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase block">Tempo Espera</span>
+                        <span id="route-wait-time" class="text-sm font-bold text-white">15 min</span>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase block">Distância</span>
+                        <span id="route-distance" class="text-sm font-bold text-blue-400">3.2 km</span>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase block">Tráfego SOS</span>
+                        <span class="text-sm font-bold text-emerald-400">Fluido</span>
+                    </div>
+                </div>
+
+                <!-- Passo a Passo da Rota -->
+                <div class="space-y-2 pt-2">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Instruções de Navegação</h3>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-start space-x-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <div class="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0 font-bold">1</div>
+                            <div>
+                                <p class="text-white font-medium">Siga em direção à Av. Principal por 1.2 km</p>
+                                <span class="text-slate-500 text-[10px]">Via mais rápida no momento</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <div class="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0 font-bold">2</div>
+                            <div>
+                                <p class="text-white font-medium">Vire à direita na Rua São Lucas</p>
+                                <span class="text-slate-500 text-[10px]">Tráfego livre de ambulâncias</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold">3</div>
+                            <div>
+                                <p class="text-white font-medium">Chegada ao destino à esquerda</p>
+                                <span class="text-slate-500 text-[10px]">Estacionamento de emergência aberto</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="startGpsNavigation()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-location-arrow animate-bounce"></i>
+                    <span>Iniciar Rota Assistida por GPS</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= BARRA DE NAVEGAÇÃO INFERIOR ================= -->
+        <nav class="bg-slate-900 border-t border-slate-800 px-2 py-2 flex justify-around items-center z-30">
+            <button onclick="navigateTab('map')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-blue-400 transition" data-tab="map">
+                <i class="fa-solid fa-map-location-dot text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Mapa</span>
+            </button>
+            <button onclick="navigateTab('triage')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-slate-400 hover:text-slate-200 transition" data-tab="triage">
+                <i class="fa-solid fa-stethoscope text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Triagem</span>
+            </button>
+            <button onclick="navigateTab('priorities')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-slate-400 hover:text-slate-200 transition" data-tab="priorities">
+                <i class="fa-solid fa-layer-group text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Prioridades</span>
+            </button>
+            <button onclick="navigateTab('profile')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-slate-400 hover:text-slate-200 transition" data-tab="profile">
+                <i class="fa-solid fa-user-gear text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Perfil</span>
+            </button>
+        </nav>
+
+        <!-- Toast de Notificações / Mensagens -->
+        <div id="toast-message" class="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-slate-700 text-xs font-medium z-50 transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4 flex items-center space-x-2">
+            <i class="fa-solid fa-circle-info text-blue-400"></i>
+            <span id="toast-text">Mensagem do sistema</span>
+        </div>
+
+    </div>
+
+    <!-- Script de Lógica do Protótipo -->
+    <script>
+        // Banco de dados simulado de hospitais
+        const hospitalsData = [
+            {
+                name: "Hospital Central de Urgências",
+                address: "Av. Brasil, 1500 - Centro",
+                crowd: "Verde",
+                crowdText: "Tranquilo",
+                waitTime: "12 min",
+                distance: "2.4 km",
+                specialties: ["Pronto Socorro", "Cardiologia", "Ortopedia"],
+                colorClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+            },
+            {
+                name: "Santa Casa de Misericórdia",
+                address: "Rua das Flores, 300 - Jardins",
+                crowd: "Amarelo",
+                crowdText: "Moderado",
+                waitTime: "35 min",
+                distance: "4.1 km",
+                specialties: ["Pediatria", "Clínica Geral", "Maternidade"],
+                colorClass: "bg-amber-500/10 text-amber-400 border-amber-500/30"
+            },
+            {
+                name: "Hospital Regional Norte",
+                address: "Rod. dos Bandeirantes, km 14",
+                crowd: "Vermelho",
+                crowdText: "Lotado / Crítico",
+                waitTime: "1h 45min",
+                distance: "6.8 km",
+                specialties: ["Trauma Pesado", "UTI", "Neurologia"],
+                colorClass: "bg-rose-500/10 text-rose-400 border-rose-500/30"
+            }
+        ];
+
+        let currentUser = null;
+        let activeCrowdFilter = 'all';
+
+        // Inicialização
+        window.onload = function() {
+            renderHospitals(hospitalsData);
+            // Verificar sessão simulada salva no localStorage
+            const savedUser = localStorage.getItem('healthwaze_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                loginSuccessUI();
+            }
+        };
+
+        // Alternar entre Login e Cadastro
+        function toggleAuthMode(mode) {
+            const loginForm = document.getElementById('form-login');
+            const registerForm = document.getElementById('form-register');
+            if (mode === 'register') {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            } else {
+                registerForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+            }
+        }
+
+        // Simular Login
+        function handleLogin(e) {
+            e.preventDefault();
+            const userVal = document.getElementById('login-user').value;
+            if(!userVal) {
+                showToast("Por favor, preencha seus dados de acesso.");
+                return;
+            }
+            currentUser = { name: "Paciente Teste", email: userVal };
+            localStorage.setItem('healthwaze_user', JSON.stringify(currentUser));
+            loginSuccessUI();
+            showToast("Login realizado com sucesso!");
+        }
+
+        // Simular Cadastro
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            if(!name || !email) {
+                showToast("Preencha todos os campos do cadastro.");
+                return;
+            }
+            currentUser = { name: name, email: email };
+            localStorage.setItem('healthwaze_user', JSON.stringify(currentUser));
+            loginSuccessUI();
+            showToast("Conta criada com sucesso!");
+        }
+
+        function loginSuccessUI() {
+            document.getElementById('screen-auth').classList.add('hidden');
+            document.getElementById('user-display-name').innerText = currentUser.name;
+            document.getElementById('profile-name').innerText = currentUser.name;
+            document.getElementById('profile-email').innerText = currentUser.email;
+            const initial = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('user-avatar').innerText = initial;
+            document.getElementById('profile-avatar').innerText = initial;
+        }
+
+        function logout() {
+            localStorage.removeItem('healthwaze_user');
+            currentUser = null;
+            document.getElementById('screen-auth').classList.remove('hidden');
+            showToast("Sessão encerrada.");
+        }
+
+        // Navegação entre abas
+        function navigateTab(tabId) {
+            const sections = ['map', 'triage', 'priorities', 'profile'];
+            sections.forEach(s => {
+                document.getElementById(`tab-${s}`).classList.add('hidden');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            // Atualizar botões da barra inferior
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-blue-400');
+                btn.classList.add('text-slate-400');
+                if(btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.remove('text-slate-400');
+                    btn.classList.add('text-blue-400');
+                }
+            });
+        }
+
+        // Renderizar Lista de Hospitais
+        function renderHospitals(list) {
+            const container = document.getElementById('hospitais-list');
+            container.innerHTML = '';
+            
+            if(list.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Nenhum hospital encontrado com este filtro.</div>`;
+                document.getElementById('hospital-count').innerText = `0 encontrados`;
+                return;
+            }
+
+            document.getElementById('hospital-count').innerText = `${list.length} encontrados`;
+
+            list.forEach((h, index) => {
+                let dotColor = h.crowd === 'Verde' ? 'bg-emerald-500' : (h.crowd === 'Amarelo' ? 'bg-amber-500' : 'bg-rose-500');
+                
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:border-slate-700 transition space-y-3";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${h.colorClass} mb-1">
+                                <span class="w-2 h-2 rounded-full ${dotColor}"></span> ${h.crowdText}
+                            </span>
+                            <h3 class="text-sm font-bold text-white">${h.name}</h3>
+                            <p class="text-xs text-slate-400">${h.address}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-white block">${h.waitTime}</span>
+                            <span class="text-[10px] text-slate-500">espera média</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs">
+                        <div class="flex items-center text-slate-400 gap-1">
+                            <i class="fa-solid fa-route text-blue-400"></i>
+                            <span>${h.distance} de você</span>
+                        </div>
+                        <button onclick="openRouteModal(${index})" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-1.5 rounded-xl shadow-md transition flex items-center gap-1 text-xs">
+                            <i class="fa-solid fa-location-arrow"></i> Rota GPS
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Filtros de Lotação
+        function filterByCrowd(level) {
+            activeCrowdFilter = level;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.getAttribute('data-filter') === level) {
+                    btn.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium whitespace-nowrap shadow-sm filter-btn";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium whitespace-nowrap hover:bg-slate-800 transition filter-btn";
+                }
+            });
+
+            if(level === 'all') {
+                renderHospitals(hospitalsData);
+            } else {
+                const filtered = hospitalsData.filter(h => h.crowd === level);
+                renderHospitals(filtered);
+            }
+        }
+
+        // Pesquisa em tempo real
+        function filterHospitals() {
+            const query = document.getElementById('search-hospital').value.toLowerCase();
+            const filtered = hospitalsData.filter(h => 
+                h.name.toLowerCase().includes(query) || 
+                h.address.toLowerCase().includes(query) ||
+                h.specialties.some(s => s.toLowerCase().includes(query))
+            );
+            renderHospitals(filtered);
+        }
+
+        // Abrir Modal de Rota
+        function openRouteModal(index) {
+            const h = hospitalsData[index];
+            document.getElementById('route-hospital-name').innerText = h.name;
+            document.getElementById('route-hospital-address').innerText = h.address;
+            document.getElementById('route-wait-time').innerText = h.waitTime;
+            document.getElementById('route-distance').innerText = h.distance;
+            
+            const badge = document.getElementById('route-status-badge');
+            badge.className = `px-2.5 py-1 rounded-full text-xs font-bold inline-block mb-1 ${h.colorClass}`;
+            badge.innerText = `Status: ${h.crowdText}`;
+
+            document.getElementById('modal-route').classList.remove('hidden');
+        }
+
+        function selectHospitalFromMap(index) {
+            openRouteModal(index);
+        }
+
+        function closeRouteModal() {
+            document.getElementById('modal-route').classList.add('hidden');
+        }
+
+        function startGpsNavigation() {
+            closeRouteModal();
+            showToast("Navegação GPS iniciada! Siga as instruções de voz.");
+        }
+
+        // Triagem Digital / Chat Interativo
+        function selectSymptom(symptomName, severityLevel) {
+            const chatMessages = document.getElementById('chat-messages');
+            
+            // Adicionar balão do usuário
+            const userMsg = document.createElement('div');
+            userMsg.className = "flex items-start justify-end space-x-2";
+            userMsg.innerHTML = `
+                <div class="bg-blue-600 rounded-2xl rounded-tr-sm p-3 text-xs text-white max-w-[85%] leading-relaxed">
+                    Meu sintoma principal: ${symptomName}
+                </div>
+            `;
+            chatMessages.appendChild(userMsg);
+
+            // Ocultar opções e mostrar resposta do assistente após pequeno delay
+            document.getElementById('symptoms-options').classList.add('hidden');
+
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = "flex items-start space-x-2 animate-fadeIn";
+                
+                let adviceText = "";
+                let badgeClass = "";
+                let badgeText = "";
+
+                if(severityLevel === 'Vermelho') {
+                    badgeText = "Urgência Crítica (Vermelho)";
+                    badgeClass = "bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                    adviceText = "Seu sintoma indica necessidade de atendimento IMEDIATO. Dirija-se ao Hospital Regional Norte ou chame uma ambulância.";
+                } else if(severityLevel === 'Amarelo') {
+                    badgeText = "Urgência Moderada (Amarelo)";
+                    badgeClass = "bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                    adviceText = "Recomendamos procurar a Santa Casa de Misericórdia nas próximas horas para avaliação médica adequada.";
+                } else {
+                    badgeText = "Pouco Urgente (Verde)";
+                    badgeClass = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                    adviceText = "Seu quadro é estável. O Hospital Central de Urgências está com ótimo tempo de espera para este atendimento.";
+                }
+
+                botMsg.innerHTML = `
+                    <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs shrink-0 font-bold">HW</div>
+                    <div class="bg-slate-800 rounded-2xl rounded-tl-sm p-3 text-xs text-slate-200 max-w-[85%] space-y-2 leading-relaxed">
+                        <p>Analisamos seu relato com base no Protocolo de Manchester.</p>
+                        <div class="p-2 rounded-lg bg-slate-900 border border-slate-700">
+                            <span class="font-bold block mb-0.5">${badgeText}</span>
+                            <span>${adviceText}</span>
+                        </div>
+                    </div>
+                `;
+                chatMessages.appendChild(botMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Mostrar resultado box
+                const resultBox = document.getElementById('triage-result');
+                const triageBadge = document.getElementById('triage-badge');
+                triageBadge.className = `px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}`;
+                triageBadge.innerText = badgeText;
+                document.getElementById('triage-advice').innerText = adviceText;
+                resultBox.classList.remove('hidden');
+
+            }, 600);
+        }
+
+        // Toast Helper
+        function openNotification() {
+            showToast("Nenhum alerta de emergência ativa na sua região.");
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast-message');
+            document.getElementById('toast-text').innerText = text;
+            toast.classList.remove('opacity-0', '-translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-4');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
